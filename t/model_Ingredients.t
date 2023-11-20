@@ -5,7 +5,7 @@ use Coocook::Model::Ingredients;
 use lib 't/lib/';
 use TestDB;
 
-plan(7);
+plan(8);
 
 my $schema = TestDB->new();
 
@@ -86,12 +86,15 @@ is my $articles = $ingredients->all_articles => array {
 },
   "all_articles";
 
-todo "fetch objects only once" => sub {
-    is(
-        ( $articles->[0]->units )[0] => exact_ref( ( $articles->[1]->units )[1] ),
-        "kg of cheese and kg of flour are the same Result object"
-    );
-};
+is(
+    ( $articles->[0]->units )[1] => exact_ref( ( $articles->[1]->units )[1] ),
+    "kg of cheese and kg of flour are the same Result object"
+);
+
+is(
+    ( $ingredients->all_articles->[0]->units )[0] => exact_ref( ( $articles->[0]->units )[0] ),
+    "calling all_articles() twice returns the same Result objects"
+);
 
 is my $units = $ingredients->all_units => array {
     item object { call short_name => 'g';  call long_name => 'grams' };
