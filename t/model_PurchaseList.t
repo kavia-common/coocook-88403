@@ -26,12 +26,14 @@ is $sections => array {
                 field unit             => hash { field short_name => "g";     etc() };
                 field article          => hash { field name       => "flour"; etc() };
                 field convertible_into => [ hash { field short_name => 'kg'; etc } ];
+                field servings         => 6;        # 4 servings pancakes + 2 servings pizza
                 field ingredients      => array {
                     item hash {
                         field id   => 1;
                         field dish => hash {
-                            field name => "pancakes";
-                            field meal => hash {
+                            field name     => "pancakes";
+                            field servings => 4;
+                            field meal     => hash {
                                 field id   => 1;
                                 field date => object {
                                     prop isa => 'DateTime';
@@ -53,6 +55,7 @@ is $sections => array {
                 field unit             => hash { field short_name => "g";    etc() };
                 field article          => hash { field name       => "salt"; etc() };
                 field convertible_into => [];
+                field servings         => 6;        # 2 servings pizza + 4 servings bread
                 field ingredients      => array {
                     item hash { field id => 6; etc() };
                     item hash { field id => 8; etc() };

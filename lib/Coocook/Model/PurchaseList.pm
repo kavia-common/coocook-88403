@@ -43,6 +43,7 @@ sub BUILD {
         $item->{article}     = $articles{ $item->{article_id} };
         $item->{unit}        = $units{ $item->{unit_id} };
         $item->{ingredients} = [];
+        $item->{servings}    = 0;
 
         push @{ $items_per_section{ $item->{article}{shop_section_id} || '' } }, $item;
     }
@@ -83,9 +84,13 @@ sub BUILD {
         }
     }
 
-    # sort ingredients per item
+    # sort ingredients per item, sum servings per item
     for my $item ( values %items ) {
         my $ingredients = $item->{ingredients};
+
+        for my $ingredient (@$ingredients) {
+            $item->{servings} += $ingredient->{dish}{servings};
+        }
 
         @$ingredients = sort {
             if ( $a->{dish_id} == $b->{dish_id} ) {    # items of same dish
