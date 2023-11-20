@@ -46,15 +46,16 @@ is $ingredients->as_arrayref => array {
 },
   "as_arrayref()";
 
-ok $ingredients->factor(42), "set factor";
-
-is $ingredients->as_arrayref => array {
-    item hash { field value => 21;  etc() };
-    item hash { field value => 42;  etc() };
-    item hash { field value => 630; etc() };
-    item hash { field value => 420; etc() };
+is $ingredients->as_arrayref( servings => 8 ) => array {
+    item hash { field value => 1;  etc };
+    item hash { field value => 2;  etc };
+    item hash { field value => 30; etc };
+    item hash { field value => 20; etc };
 },
-  "multiplied values";
+  "as_arrayref() with servings";
+
+like dies { $ingredients->as_arrayref( foo => 42 ) } => qr/argument/,
+  "as_arrayref() with unsupported arguments dies";
 
 is my $articles = $ingredients->all_articles => array {
     item object {

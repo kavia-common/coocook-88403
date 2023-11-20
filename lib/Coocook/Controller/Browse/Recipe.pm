@@ -137,25 +137,17 @@ sub show : GET HEAD Chained('base') PathPart('') Args(0) RequiresCapability('vie
     my $recipe  = $c->stash->{recipe};
     my $project = $recipe->project;
 
-    my $factor = 1;
-    my $servings;
-
-    if ( $servings = $c->req->params->get('servings') ) {
-        $factor = $servings / $recipe->servings;
-    }
-
-    $servings ||= $recipe->servings;
+    my $servings = $c->req->params->get('servings') || $recipe->servings;
 
     my %ingredients;
 
     for my $block (qw< prepared not_prepared >) {
-        my $ingredients = $recipe->ingredients->$block();
+        my $ingredients = $c->model('Ingredients')->new(
+            recipe      => $recipe,
+            ingredients => $recipe->ingredients->$block(),
+        );
 
-        $ingredients{$block} = $c->model('Ingredients')->new(
-            factor      => $factor,
-            ingredients => $ingredients,
-            project     => $project,
-        )->as_arrayref;
+        $ingredients{$block} = $ingredients->as_arrayref( servings => $servings );
     }
 
     $c->user

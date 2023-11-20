@@ -5,6 +5,8 @@ package Coocook::Model::Ingredients;
 use Moose;
 use Moose::Util::TypeConstraints;
 
+use Carp;
+
 class_type 'Coocook::Schema::ResultSet::DishIngredient';
 class_type 'Coocook::Schema::ResultSet::RecipeIngredient';
 
@@ -16,12 +18,6 @@ has all_articles => (
 has all_units => (
     is  => 'rw',
     isa => 'ArrayRef[Coocook::Schema::Result::Unit]',
-);
-
-has factor => (
-    is      => 'rw',
-    isa     => 'Num',
-    default => 1,
 );
 
 has ingredients => (
@@ -50,14 +46,14 @@ around BUILDARGS => sub {
     my %args = @_;
 
     if ( my $dish = delete $args{dish} ) {
-        $args{project}     = $dish->project;
-        $args{ingredients} = $dish->ingredients;
-        $args{servings}    = $dish->servings;
+        $args{project}     ||= $dish->project;
+        $args{ingredients} ||= $dish->ingredients;
+        $args{servings}    ||= $dish->servings;
     }
     elsif ( my $recipe = delete $args{recipe} ) {
-        $args{project}     = $recipe->project;
-        $args{ingredients} = $recipe->ingredients;
-        $args{servings}    = $recipe->servings;
+        $args{project}     ||= $recipe->project;
+        $args{ingredients} ||= $recipe->ingredients;
+        $args{servings}    ||= $recipe->servings;
     }
 
     return $class->$orig(%args);
@@ -66,7 +62,15 @@ around BUILDARGS => sub {
 sub build_project { shift->ingredients->one_row->project }
 
 sub as_arrayref {
-    my $self = shift;
+    my ( $self, %args ) = @_;
+
+    my $factor = 1;
+
+    if ( my $servings = delete $args{servings} ) {
+        $factor = $servings / $self->servings;
+    }
+
+    %args and croak "Unsupported arguments for as_arrayref()";
 
     my ( $articles => $units ) = $self->project->articles_cached_units;
 
@@ -85,7 +89,7 @@ sub as_arrayref {
                 id       => $ingredient->id,
                 prepare  => $ingredient->format_bool( $ingredient->prepare ),
                 position => $ingredient->position,
-                value    => $ingredient->value * $self->factor,
+                value    => $ingredient->value * $factor,
                 comment  => $ingredient->comment,
                 unit     => $units{ $ingredient->unit_id },
                 article  => $article,
