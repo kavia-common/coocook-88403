@@ -41,7 +41,7 @@ INSERT INTO "shop_sections"
 
 INSERT INTO "articles"
 (id, project_id, shop_section_id, shelf_life_days, preorder_servings, preorder_workdays,            name, comment) VALUES
-( 1,          1,               1,            NULL,              NULL,              NULL,         'flour',      ''),
+( 1,          1,               1,            NULL,                 3,                 5,         'flour',      ''), -- must be preordered 1 week in advance if >=3 servings
 ( 2,          1,               1,            NULL,              NULL,              NULL,          'salt',      ''),
 ( 3,          1,            NULL,            NULL,              NULL,              NULL,         'water',      ''),
 ( 4,          1,               2,            NULL,              NULL,              NULL,        'cheese',      ''),

@@ -37,6 +37,12 @@ has project => (
     builder => 'build_project',
 );
 
+has servings => (
+    is       => 'rw',
+    isa      => 'Num',
+    required => 1,
+);
+
 around BUILDARGS => sub {
     my $orig  = shift;
     my $class = shift;
@@ -46,10 +52,12 @@ around BUILDARGS => sub {
     if ( my $dish = delete $args{dish} ) {
         $args{project}     = $dish->project;
         $args{ingredients} = $dish->ingredients;
+        $args{servings}    = $dish->servings;
     }
     elsif ( my $recipe = delete $args{recipe} ) {
         $args{project}     = $recipe->project;
         $args{ingredients} = $recipe->ingredients;
+        $args{servings}    = $recipe->servings;
     }
 
     return $class->$orig(%args);
@@ -70,6 +78,8 @@ sub as_arrayref {
         my $ingredients = $self->ingredients->sorted;
 
         while ( my $ingredient = $ingredients->next ) {
+            my $article = $articles{ $ingredient->article_id };
+
             push @ingredients,
               {
                 id       => $ingredient->id,
@@ -78,7 +88,9 @@ sub as_arrayref {
                 value    => $ingredient->value * $self->factor,
                 comment  => $ingredient->comment,
                 unit     => $units{ $ingredient->unit_id },
-                article  => $articles{ $ingredient->article_id },
+                article  => $article,
+                preorder =>
+                  ( defined $article->preorder_servings and $self->servings >= $article->preorder_servings ),
               };
         }
     }

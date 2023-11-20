@@ -15,28 +15,32 @@ ok my $ingredients =
 
 is $ingredients->as_arrayref => array {
     item hash {
-        field value   => 0.5;
-        field unit    => object { call short_name => 'l' };
-        field article => object { call name       => 'water' };
+        field value    => 0.5;
+        field unit     => object { call short_name => 'l' };
+        field article  => object { call name       => 'water' };
+        field preorder => F();
         etc();
     };
     item hash {
-        field value   => 1;
-        field unit    => object { call short_name => 'kg' };
-        field article => object { call name       => 'flour' };
+        field value    => 1;
+        field unit     => object { call short_name => 'kg' };
+        field article  => object { call name       => 'flour' };
+        field preorder => T();
         etc();
     };
     item hash {
-        field value   => 15;
-        field unit    => object { call short_name => 'g' };
-        field article => object { call name       => 'salt' };
+        field value    => 15;
+        field unit     => object { call short_name => 'g' };
+        field article  => object { call name       => 'salt' };
+        field preorder => F();
         etc();
     };
     item hash {
-        field value   => 10;
-        field unit    => object { call short_name => 'g' };
-        field article => object { call name       => 'salt' };
-        field comment => 'if you like salty';
+        field value    => 10;
+        field unit     => object { call short_name => 'g' };
+        field article  => object { call name       => 'salt' };
+        field preorder => F();
+        field comment  => 'if you like salty';
         etc();
     };
 },
