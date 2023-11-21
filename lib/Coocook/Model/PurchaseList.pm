@@ -9,16 +9,11 @@ has list => (
     is       => 'ro',
     isa      => 'Coocook::Schema::Result::PurchaseList',
     required => 1,
+    handles  => ['date'],
 );
 
-has shop_sections => (
-    is      => 'rw',
-    isa     => 'ArrayRef',
-    default => sub { [] },
-);
-
-has units => (
-    is      => 'rw',
+has [qw( preorders shop_sections units )] => (
+    is      => 'ro',
     isa     => 'ArrayRef',
     default => sub { [] },
 );
@@ -40,10 +35,11 @@ sub BUILD {
     my %items_per_section;
 
     for my $item ( values %items ) {
-        $item->{article}     = $articles{ $item->{article_id} };
-        $item->{unit}        = $units{ $item->{unit_id} };
-        $item->{ingredients} = [];
-        $item->{servings}    = 0;
+        $item->{article}           = $articles{ $item->{article_id} };
+        $item->{unit}              = $units{ $item->{unit_id} };
+        $item->{ingredients}       = [];
+        $item->{servings}          = 0;
+        $item->{requires_preorder} = '';
 
         push @{ $items_per_section{ $item->{article}{shop_section_id} || '' } }, $item;
     }
@@ -84,12 +80,22 @@ sub BUILD {
         }
     }
 
-    # sort ingredients per item, sum servings per item
+    my %preorders;
+
+    # sort ingredients per item, sum servings per item, preorders
     for my $item ( values %items ) {
         my $ingredients = $item->{ingredients};
 
         for my $ingredient (@$ingredients) {
             $item->{servings} += $ingredient->{dish}{servings};
+        }
+
+        if ( defined( my $preorder_servings = $item->{article}{preorder_servings} ) ) {
+            if ( $item->{servings} >= $preorder_servings ) {
+                $item->{requires_preorder} = 1;
+
+                push $preorders{ $item->{article}{preorder_workdays} }->@*, $item;
+            }
         }
 
         @$ingredients = sort {
@@ -155,6 +161,27 @@ sub BUILD {
         }
     }
 
+    # preorders
+    my @preorders;
+
+    for my $workdays ( sort { $a <=> $b } keys %preorders ) {
+        my $date = $self->list->date->clone;
+
+        # TODO test business day calculation
+        $date->subtract( weeks => int( $workdays / 5 ) );
+        $date->subtract( days  => $workdays % 5 );
+
+        # sort items by article name
+        my @items = sort { $a->{article}{name} cmp $b->{article}{name} } $preorders{$workdays}->@*;
+
+        unshift @preorders,    # chronological order = descending workdays in advance
+          {
+            workdays => $workdays,
+            date     => $date,
+            items    => \@items,
+          };
+    }
+
     # shop sections
     my @sections =
       $list->articles->search_related( shop_section => undef, { distinct => 1 } )->hri->all;
@@ -182,8 +209,9 @@ sub BUILD {
         } @$items;
     }
 
-    $self->units( [ values %units ] );
-    $self->shop_sections( \@sections );
+    push $self->preorders->@*,     @preorders;
+    push $self->shop_sections->@*, @sections;
+    push $self->units->@*,         values %units;
 }
 
 __PACKAGE__->meta->make_immutable;

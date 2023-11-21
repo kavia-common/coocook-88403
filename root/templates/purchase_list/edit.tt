@@ -11,7 +11,42 @@ js_push_template_path();
 <button class="btn btn-primary my-3 material-icons" onclick="print()" title="Print">print</button>
 
 [% IF sections.size == 0 %]
-<p>Currently no items assigned</p>
+    <p>Currently no items assigned</p>
+[% ELSE %]
+    <div>
+        <h3>Items to preorder <i class="material-icons">pending_actions</i></h3>
+
+    [% IF preorders.empty %]
+        <p>Nothing to do.</p>
+    [% ELSE %]
+        <table class="table">
+            <tr>
+                <th>Preorder date</th>
+                <th>Items</th>
+                <th>Preorder conditions</th>
+            </tr>
+        [% FOR day IN preorders %]
+            [% FOR item IN day.items %]
+            <tr>
+                [% IF loop.first %]
+                <td rowspan="[% day.items.size %]">
+                    [% display_date(day.date) %]
+                    <br>
+                    ([% numerus(day.workdays, 'workday', 'workdays') %] in advance)</td>
+                [% END %]
+                <td>
+                [% display_value_unit(item.value, item.unit, {html=>1}) %]
+                [% item.article.name | html %]
+                </td>
+                <td>
+                [% item.servings %] &ge; [% item.article.preorder_servings %] servings
+                </td>
+            </tr>
+            [% END %]
+        [% END %]
+        </table>
+    [% END %]
+    </div>
 [% END %]
 
 [% FOREACH section IN sections %]
@@ -84,6 +119,9 @@ js_push_template_path();
                                ELSIF item.offset > 0; '&CirclePlus;';
                                END %]
                         </span>
+                        [% IF item.requires_preorder %]
+                            <i class="material-icons" title="preorder">pending_actions</i>
+                        [% END %]
                     </td>
                     [% FOREACH ingredient IN item.ingredients %]
                     [% '<tr>' UNLESS loop.index == 0 %]

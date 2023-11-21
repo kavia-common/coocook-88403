@@ -13,6 +13,8 @@ my $db = TestDB->new;
 ok my $list =
   Coocook::Model::PurchaseList->new( list => $db->resultset('PurchaseList')->find(1) );
 
+is $list->date->ymd => '1999-12-31';
+
 ok my $sections = $list->shop_sections;
 
 is $sections => array {
@@ -22,12 +24,13 @@ is $sections => array {
         field name       => "bakery products";
         field items      => array {
             item hash {
-                field value            => 1000;
-                field unit             => hash { field short_name => "g";     etc() };
-                field article          => hash { field name       => "flour"; etc() };
-                field convertible_into => [ hash { field short_name => 'kg'; etc } ];
-                field servings         => 6;        # 4 servings pancakes + 2 servings pizza
-                field ingredients      => array {
+                field value             => 1000;
+                field unit              => hash { field short_name => "g";     etc() };
+                field article           => hash { field name       => "flour"; etc() };
+                field convertible_into  => [ hash { field short_name => 'kg'; etc } ];
+                field servings          => 6;        # 4 servings pancakes + 2 servings pizza
+                field requires_preorder => T();
+                field ingredients       => array {
                     item hash {
                         field id   => 1;
                         field dish => hash {
@@ -51,12 +54,13 @@ is $sections => array {
                 etc();
             };
             item hash {
-                field value            => 37.5;
-                field unit             => hash { field short_name => "g";    etc() };
-                field article          => hash { field name       => "salt"; etc() };
-                field convertible_into => [];
-                field servings         => 6;        # 2 servings pizza + 4 servings bread
-                field ingredients      => array {
+                field value             => 37.5;
+                field unit              => hash { field short_name => "g";    etc() };
+                field article           => hash { field name       => "salt"; etc() };
+                field convertible_into  => [];
+                field servings          => 6;        # 2 servings pizza + 4 servings bread
+                field requires_preorder => F();
+                field ingredients       => array {
                     item hash { field id => 6; etc() };
                     item hash { field id => 8; etc() };
                 };
@@ -66,6 +70,17 @@ is $sections => array {
     };
 },
   "->shop_sections()";
+
+is $list->preorders => array {
+    item hash {
+        field workdays => 5;
+        field date     => object { call ymd => '1999-12-24' };
+        field items    => array {
+            item exact_ref( $sections->[0]{items}[0] );
+        };
+    };
+},
+  "preordered item is flour item";
 
 memory_cycle_ok $sections, "result of by_section() is free of memory cycles";
 

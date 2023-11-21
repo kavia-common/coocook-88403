@@ -88,8 +88,9 @@ sub edit : GET HEAD Chained('base') PathPart('') Args(0) RequiresCapability('vie
     my $list = $c->model('PurchaseList')->new( list => $c->stash->{list} );
 
     $c->stash(
-        sections => $list->shop_sections,
-        units    => $list->units,
+        preorders => $list->preorders,
+        sections  => $list->shop_sections,
+        units     => $list->units,
     );
 
     $c->has_capability('edit_project')
