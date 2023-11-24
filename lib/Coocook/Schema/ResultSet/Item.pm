@@ -33,6 +33,35 @@ sub add_or_create {
     $item->update_or_insert and return $item;
 }
 
+sub to_preorder {
+    my $self = shift;
+
+    return $self->with_servings_sum->search(
+        {
+            'article.preorder_servings' => { '!=' => undef },
+            'article.preorder_workdays' => { '!=' => undef },
+            servings_sum                => { '>=' => 'article.preorder_servings' },
+        },
+        {
+            join => 'article',
+        }
+    );
+}
+
+sub with_servings_sum {
+    my $self = shift;
+
+    return $self->search(
+        undef,
+        {
+            '+columns' => {
+                servings_sum =>
+                  $self->correlate('ingredients')->search_related('dish')->get_column('servings')->sum_rs->as_query,
+            },
+        }
+    );
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;
