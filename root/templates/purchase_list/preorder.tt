@@ -1,0 +1,43 @@
+[% title = "Preorder List";
+
+css.push('/css/print.css');
+
+FOR day IN preorder_list %]
+<h2>[% display_date(day.date) %]</h2>
+
+<table>
+    <thead>
+        <th>Purchase List</th>
+        <th>Items</th>
+        <th>Preorder conditions</th>
+    </thead>
+
+    <tbody>
+    [% FOR list IN day.lists;
+        purchase_list = list.purchase_list;
+        FOR item IN list.items %]
+    <tr>
+        [% IF loop.first %]
+        <td rowspan="[% list.items.size %]">
+            <a href="[% purchase_list.url | html %]">[% purchase_list.name | html %]</a>
+            <br>
+            on [% display_date(purchase_list.date) %]
+        </td>
+        [% END %]
+        <td>
+            [% display_value_unit(item.value, item.unit, {html=>1}) %]
+            <a href="[% item.article.url | html %]">[% item.article.name | html %]</a>
+        [% IF item.comment.length %]
+            <span class="comment">([% item.comment | html %])</span>
+        [% END %]
+        </td>
+        <td>
+            [% item.servings_sum %] &ge; [% item.article.preorder_servings %] servings
+            ([% numerus(item.article.preorder_workdays, 'workday', 'workdays') %] in advance)
+        </td>
+    </tr>
+        [% END %]
+    [% END %]
+    </tbody>
+</table>
+[% END %]

@@ -40,10 +40,17 @@ sub to_preorder {
         {
             'article.preorder_servings' => { '!=' => undef },
             'article.preorder_workdays' => { '!=' => undef },
-            servings_sum                => { '>=' => 'article.preorder_servings' },
         },
         {
             join => 'article',
+        }
+    )->as_subselect_rs->search(
+        {
+            servings_sum => { '>=' => { -ident => 'article.preorder_servings' } },
+        },
+        {
+            join       => 'article',
+            '+columns' => [ { servings_sum => 'servings_sum' } ],
         }
     );
 }
@@ -54,10 +61,13 @@ sub with_servings_sum {
     return $self->search(
         undef,
         {
-            '+columns' => {
-                servings_sum =>
-                  $self->correlate('ingredients')->search_related('dish')->get_column('servings')->sum_rs->as_query,
-            },
+            '+select' => [
+                {
+                    '' =>
+                      $self->correlate('ingredients')->search_related('dish')->get_column('servings')->sum_rs->as_query,
+                    -as => 'servings_sum',
+                },
+            ],
         }
     );
 }

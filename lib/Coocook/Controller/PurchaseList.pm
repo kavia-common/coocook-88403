@@ -42,6 +42,8 @@ sub index : GET HEAD Chained('submenu') PathPart('purchase_lists') Args(0)
 
     my $lists = $c->project->purchase_lists;
 
+    my $number_preorder_items = $lists->search_related('items')->to_preorder->count();
+
     my $today    = DateTime->today;
     my $min_date = $today;
 
@@ -68,11 +70,32 @@ sub index : GET HEAD Chained('submenu') PathPart('purchase_lists') Args(0)
     }
 
     $c->stash(
-        default_date => $default_date,
-        min_date     => $min_date,
-        lists        => \@lists,
-        create_url   => $c->project_uri( $self->action_for('create') ),
+        default_date          => $default_date,
+        min_date              => $min_date,
+        lists                 => \@lists,
+        create_url            => $c->project_uri( $self->action_for('create') ),
+        preorder_url          => $c->project_uri( $self->action_for('preorder') ),
+        number_preorder_items => $number_preorder_items,
     );
+}
+
+sub preorder : GET HEAD Chained('submenu') Args(0) RequiresCapability('view_project') {
+    my ( $self, $c ) = @_;
+
+    my $preorder_list = $c->model('PreorderList')->from_project( $c->project );
+
+    for my $day (@$preorder_list) {
+        for my $list ( $day->{lists}->@* ) {
+            my $purchase_list = $list->{purchase_list};
+            $purchase_list->{url} = $c->project_uri( $self->action_for('edit'), $purchase_list->id );
+
+            for my $item ( $list->{items}->@* ) {
+                $item->{article}{url} ||= $c->project_uri( '/article/edit', $item->{article_id} );
+            }
+        }
+    }
+
+    $c->stash( preorder_list => $preorder_list );
 }
 
 sub base : Chained('submenu') PathPart('purchase_list') CaptureArgs(1) {

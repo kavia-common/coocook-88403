@@ -12,6 +12,19 @@ js_push_template_path() %]
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <td></td>
+            <td>
+    [% IF number_preorder_items > 0 %]
+                <a href="[% preorder_url | html %]"><em>preorder list</em></a>
+    [% ELSE %]
+                <em class="text-secondary">preorder list</em>
+    [% END %]
+            </td>
+            <td>[% number_preorder_items %]</td>
+            <td></td>
+        </tr>
+
     [% FOR list IN lists %]
         <tr>
             <td>[% display_date(list.date, {html=>1}) %]</td>
@@ -66,6 +79,8 @@ js_push_template_path() %]
 [% WRAPPER includes/infobox.tt %]
     <em>Purchase lists</em> contain all articles that need to be sourced to prepare the planned meals.
     Sort them into multiple lists for different purchase dates or stores.
+    <br>
+    The <em>preorder list</em> contains all items whose article requires preorder for the planned number of servings.
 </p>
 
 <p>
