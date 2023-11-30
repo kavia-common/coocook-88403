@@ -10,14 +10,16 @@ use TestDB;
 
 my $db = TestDB->new;
 
-ok my $list =
-  Coocook::Model::PurchaseList->new( list => $db->resultset('PurchaseList')->find(1) );
+ok my $list = Coocook::Model::PurchaseList->new( list => $db->resultset('PurchaseList')->find(1) ),
+  "new()";
 
-is $list->date->ymd => '1999-12-31';
+is $list->date => object {
+    prop isa => 'DateTime';
+    call ymd => '1999-12-31';
+},
+  "->date";
 
-ok my $sections = $list->shop_sections;
-
-is $sections => array {
+is my $sections = $list->shop_sections => array {
     item hash {
         field id         => 1;
         field project_id => 1;
@@ -71,6 +73,8 @@ is $sections => array {
 },
   "->shop_sections()";
 
+memory_cycle_ok $sections, "... is free of memory cycles";
+
 is $list->preorders => array {
     item hash {
         field workdays => 5;
@@ -80,8 +84,6 @@ is $list->preorders => array {
         };
     };
 },
-  "preordered item is flour item";
-
-memory_cycle_ok $sections, "result of by_section() is free of memory cycles";
+  "->preorders is 1 item that is flour";
 
 done_testing;
