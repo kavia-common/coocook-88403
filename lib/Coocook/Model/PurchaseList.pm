@@ -208,9 +208,9 @@ sub BUILD {
         } @$items;
     }
 
-    push $self->preorders->@*,     @preorders;
-    push $self->shop_sections->@*, @sections;
-    push $self->units->@*,         values %units;
+    $self->preorders->@*     = @preorders;
+    $self->shop_sections->@* = @sections;
+    $self->units->@*         = values %units;
 }
 
 __PACKAGE__->meta->make_immutable;
