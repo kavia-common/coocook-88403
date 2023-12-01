@@ -86,4 +86,52 @@ is $list->preorders => array {
 },
   "->preorders is 1 item that is flour";
 
+subtest "workday calculation" => sub {
+    my $list    = $db->resultset('PurchaseList')->find(1) || die;
+    my $article = $db->resultset('Article')->find(1)      || die;
+
+    my @tests = (
+        ## purchase list: 1999-12-31  Fri
+        [ 0   => '1999-12-31', 'Fri' ],
+        [ 1   => '1999-12-30', 'Thu' ],
+        [ 2   => '1999-12-29', 'Wed' ],
+        [ 3   => '1999-12-28', 'Tue' ],
+        [ 4   => '1999-12-27', 'Mon' ],
+        [ 5   => '1999-12-24', 'Fri' ],
+        [ 6   => '1999-12-23', 'Thu' ],
+        [ 7   => '1999-12-22', 'Wed' ],
+        [ 10  => '1999-12-17', 'Fri' ],
+        [ 100 => '1999-08-13', 'Fri' ],
+
+        sub { $list->update( { date => '2000-01-03' } ); $list->discard_changes },    # Mon
+        [ 0   => '2000-01-03', 'Mon' ],
+        [ 1   => '1999-12-31', 'Fri' ],
+        [ 2   => '1999-12-30', 'Thu' ],
+        [ 3   => '1999-12-29', 'Wed' ],
+        [ 4   => '1999-12-28', 'Tue' ],
+        [ 5   => '1999-12-27', 'Mon' ],
+        [ 6   => '1999-12-24', 'Fri' ],
+        [ 7   => '1999-12-23', 'Thu' ],
+        [ 10  => '1999-12-17', 'Fri' ],
+        [ 100 => '1999-08-13', 'Wed' ],
+    );
+
+    for (@tests) {
+        if ( ref eq 'CODE' ) {
+            $_->();
+            next;
+        }
+
+        my ( $workdays => $ymd, $day_abbr ) = @$_;
+        $article->update( { preorder_workdays => $workdays } );
+        is(
+            Coocook::Model::PurchaseList->new( list => $list )->preorders->[0]{date} => object {
+                call ymd      => $ymd;
+                call day_abbr => $day_abbr;    # only for verifying test data
+            },
+            $workdays
+        ) or warn $list->date;
+    }
+};
+
 done_testing;
