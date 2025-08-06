@@ -1,145 +1,219 @@
 # Coocook
 
-Web application for collecting recipes and making food plans
+A modern web application for collecting recipes, creating food plans, and efficiently managing ingredient and shopping lists for groups or individuals.
 
-## Main features
+---
 
-* collect recipes
-* create food plans
-    * simply import dishes from your recipes
-* gather purchase lists
-    * convert units to summarize list items
-* print views for whole project and each day
-    * including ingredients, cooking instructions
-* special features
-    * define maximum shelf life or limit for need to preorder of articles
-    * select some ingredients and part of cooking instructions to be done at an earlier meals
+## Table of Contents
 
-## Quick start
+- [Project Overview](#project-overview)
+- [Main Features](#main-features)
+- [Demo and Screenshots](#demo-and-screenshots)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Clone and Setup](#clone-and-setup)
+  - [Configuration](#configuration)
+  - [Running the Application](#running-the-application)
+  - [Running with Docker](#running-with-docker)
+- [Usage Examples](#usage-examples)
+- [Testing](#testing)
+- [Developer Notes](#developer-notes)
+- [Terminology](#terminology)
+- [Contributing](#contributing)
+- [Mailing List](#mailing-list)
+- [Author & Contributors](#author--contributors)
+- [License](#license)
 
-Get source code:
+---
+
+## Project Overview
+
+**Coocook** is an open-source web application that helps users organize recipes, plan meals, generate shopping lists, and more—ideal for families, organizations, or food enthusiasts. It emphasizes simplicity, group collaboration, and automation of repetitive kitchen planning tasks.
+
+---
+
+## Main Features
+
+- **Collect and curate recipes** with flexible ingredient lists and cooking instructions.
+- **Plan meals**: Easily schedule dishes into meal plans and adjust quantities for any group size.
+- **Automated purchase/shopping lists**: Aggregate ingredients needed from multiple meals, with unit conversions to summarize items for efficient shopping.
+- **Print views** for whole projects or per-day plans, including all recipes, ingredients, and instructions.
+- **Shelf life & pre-ordering**: Set max shelf life/advance order limits for articles.
+- **Prep-ahead cues**: Mark ingredients or steps to be done during earlier meals.
+- **Collaboration-ready**: Organize by projects (e.g., family, club, event cooking).
+- Designed to be self-hosted, privacy-friendly, and extensible.
+
+---
+
+## Demo and Screenshots
+
+_(Add demo URL and screenshots here if available)_
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Perl 5** (latest recommended) with [cpanm](https://metacpan.org/pod/App::cpanminus)
+- **Database**: [SQLite](https://www.sqlite.org/) (default), or [PostgreSQL](https://www.postgresql.org/) (optional for advanced setups)
+- UNIX-like Operating System preferred for full support (Windows may have limitations)
+- Basic C toolchain (for Perl modules with XS/C-extensions)
+
+##### On Debian/Ubuntu:
 
 ```console
-$ git clone https://gitlab.com/coocook/coocook.git
-$ cd coocook/
+sudo apt-get update
+sudo apt-get install cpanminus sqlite3 build-essential \
+  libssl-dev zlib1g-dev libexpat1-dev libncurses-dev \
+  libreadline-dev libpq-dev
 ```
+
+---
+
+### Clone and Setup
+
+```console
+git clone https://gitlab.com/coocook/coocook.git
+cd coocook/
+```
+
+---
 
 ### Configuration
 
-The only configuration required to start a development server is a database connection.
-It’s recommended to configure (possibly multiple) connections in `dbic.yaml` in the project root directory.
+A **database connection** is the only required config for development.
 
-You can copy the example file [`share/examples/dbic.yaml`](share/examples/dbic.yaml) to the project root directory:
+1. **Copy sample configs:**
 
-```console
-$ cp share/examples/dbic.yaml ./
-```
+   ```console
+   cp share/examples/dbic.yaml ./
+   cp share/examples/coocook.yaml ./
+   ```
 
-By default Coocook will connect to the connection in `dbic.yaml` with key `development`.
-The example file defines a local SQLite file `coocook.sqlite`.
+   - Edit `dbic.yaml` to match your DB location/credentials.
+   - Edit `coocook.yaml` for further app-level config if desired.
 
-The selected connection key and other settings can be configured in a config file format supported by [`Catalyst::Plugin::ConfigLoader`](https://metacpan.org/dist/Catalyst-Plugin-ConfigLoader/view/lib/Catalyst/Plugin/ConfigLoader/Manual.pod) like `coocook.yaml`.
-You can copy the example file [`share/examples/coocook.yaml`](share/examples/coocook.yaml)
-with the most common settings to the project root directory:
+2. **See also:** default settings in [`lib/Coocook.pm`](lib/Coocook.pm).
 
-```console
-$ cp share/examples/coocook.yaml ./
-```
+---
 
-For other possible settings see the default values defined in [`lib/Coocook.pm`](lib/Coocook.pm).
+### Running the Application
 
-### Run with native Perl (works best on Unix-like Operating Systems)
+#### Native Perl (Recommended for Dev):
 
-Prerequisites:
+1. **Install Perl dependencies:**
 
-* [Perl5](https://www.perl.org/get.html)
-  with [`cpanm`](https://metacpan.org/pod/App::cpanminus#INSTALLATION)
+   ```console
+   cpanm --installdeps .
+   # Optionally, also:
+   cpanm --installdeps --with-develop --with-recommends --with-suggests .
+   ```
 
-* database
+2. **Set up the database and start server:**
 
-  * by default [SQLite](https://www.sqlite.org/)
-    with [`DBD::SQLite`](https://metacpan.org/pod/DBD::SQLite)
+   ```console
+   script/coocook_deploy.pl --connection_name 'development' install
+   script/coocook_server.pl --debug
+   # (Visit http://0:3000/ in your browser)
+   ```
 
-  * or [PostgreSQL](https://www.postgresql.org/)
-    with [`DBD::Pg`](https://metacpan.org/pod/DBD::Pg)
+   - Use `--restart` with `coocook_server.pl` for auto-reloading in development (requires `Catalyst::Restarter`).
 
-With Ubuntu or Debian Linux:
+#### Running with Docker
 
-```console
-$ sudo apt-get install cpanminus sqlite3
-```
+See [hub.docker.com/r/coocook/coocook-dev](https://hub.docker.com/r/coocook/coocook-dev) for a ready-to-go environment. After pulling the image, follow container startup instructions as per the Docker Hub page.
 
-To install Perl distributions that include C code you’ll probably need a C toolchain and some libraries:
+---
 
-```console
-$ sudo apt-get install build-essential
-$ sudo apt-get install libssl-dev zlib1g-dev             # for Net::SSLeay
-$ sudo apt-get install libexpat1-dev                     # for XML::Parser
-$ sudo apt-get install libncurses-dev libreadline-dev    # for Term::ReadLine::Gnu for development mode
-$ sudo apt-get install libpq-dev                         # for DBD::Pg
-```
+## Usage Examples
 
-Install Perl5 dependencies required for running the application:
+- **Add a Recipe:** Use the web interface to enter ingredients, instructions, and categorize the dish.
+- **Create a Food Plan:** Drag recipes/dishes onto the calendar or meal plan grid to schedule.
+- **Generate Shopping List:** After building a meal plan, click the "purchase list" view to see aggregated, unit-converted ingredients to buy.
+- **Print/Export:** Use built-in print views for daily or project-wide cooking.
 
-```console
-$ cpanm --installdeps .
-```
+(To contribute more usage examples, please open a pull request!)
 
-There are a few additional dependencies for *development* as well *recommended* and *suggested* dependencies. To install these as well run:
+---
 
-```console
-$ cpanm --installdeps --with-develop --with-recommends --with-suggests .
-```
+## Testing
 
-Install the database schema into a connection from your `dbic.yaml` (see above) and start development server in debug mode:
+- Automated test suite available in the `t/` directory.
+- Run all tests:
 
-```console
-$ script/coocook_deploy.pl --connection_name 'development' install
-$ script/coocook_server.pl --debug
-...
-HTTP::Server::PSGI: Accepting connections at http://0:3000/
-```
+  ```console
+  prove -l
+  ```
 
-Hint: With the `--restart` option the development server restarts automatically when files in `lib/` are changed.
-This requires [`Catalyst::Restarter`](https://metacpan.org/pod/Catalyst::Restarter).
+- For specific tests (e.g., deployment, DB, or logic):
 
-### Run with Docker
+  ```console
+  perl t/controller_User.t
+  ```
 
-Follow the instructions at [hub.docker.com/r/coocook/coocook-dev](https://hub.docker.com/r/coocook/coocook-dev) to use the Docker image for development.
+---
 
-## Mailing list
+## Developer Notes
 
-* <coocook@lists.coocook.org>
-* subscribe at [lists.coocook.org/mailman/listinfo/coocook](https://lists.coocook.org/mailman/listinfo/coocook)
-* or send an email with subject `subscribe` to
-[coocook-request@lists.coocook.org](mailto:coocook-request@lists.coocook.org?subject=subscribe)
+- **Codebase overview:**
+  - Major scripts in `script/`
+  - Core app logic in `lib/`
+  - Frontend templates in `root/templates/`
+  - Static assets in `root/static/`
+  - Database schema and entity docs: `doc/entities.md`
+- **Style and static checks:** See `t/perltidy.t` (style), `t/perlcritic.t` (lint)
+- **Utilities:** See `util/perltidy.sh` for formatting.
+
+---
 
 ## Terminology
 
-| Name | Description | Example |
-| --- | --- | --- |
-| Project | self-contained collection of Coocook data | Paris vacation |
-| Meal | an occasion for food on a particular date | lunch at August 15th |
-| Dish | an actual food planned for a certain meal | apple pie for lunch on August 15th |
-| Recipe | a scalable template for a dish | apple pie |
-| Ingredient | an amount of some article for a dish/recipe | 1kg of apples |
-| Article | a single sort of food that can be purchased | apples |
-| Unit | a type of measurement | kilograms
+| Name      | Description                                 | Example                        |
+| --------- | ------------------------------------------- | ------------------------------ |
+| Project   | Self-contained data collection in Coocook   | Paris vacation                 |
+| Meal      | Occasion for food on a date                 | Lunch at August 15th           |
+| Dish      | Recipe scheduled for a specific meal        | Apple pie for lunch 15 Aug     |
+| Recipe    | Scalable template used for dishes           | Apple pie                      |
+| Ingredient| Article quantity needed for a dish/recipe   | 1kg of apples                  |
+| Article   | Single sort of food (buyable)               | Apples                         |
+| Unit      | Measurement type                            | Kilograms                      |
 
-## Author
+---
 
-Daniel Böhmer <post@daniel-boehmer.de>
+## Contributing
 
-## Contributors
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) (or open an issue for guidance).
 
-* [@ChristinaSi](https://github.com/ChristinaSi) Christina Sixtus
-* [@moseschmiedel](https://gitlab.com/moseschmiedel) Mose Schmiedel
-* [@rico-hengst](https://github.com/rico-hengst) Rico Hengst
-* [@kuro610](https://gitlab.com/kuro610) Kurt Roscher
-* [@tjfoerster](https://gitlab.com/tjfoerster) Timon Förster
+- Fork the repo and submit Merge Requests/Pull Requests.
+- Check formatting and basic tests before submitting (`prove -l`).
+- Join the mailing list to discuss ideas or issues.
 
-## Copyright and License
+---
+
+## Mailing List
+
+- coocook@lists.coocook.org
+- Subscribe: [lists.coocook.org/mailman/listinfo/coocook](https://lists.coocook.org/mailman/listinfo/coocook)
+- Or email `subscribe` to [coocook-request@lists.coocook.org](mailto:coocook-request@lists.coocook.org?subject=subscribe)
+
+---
+
+## Author & Contributors
+
+- **Author:** Daniel Böhmer (<post@daniel-boehmer.de>)
+- **Core Contributors:**
+  - [@ChristinaSi](https://github.com/ChristinaSi) Christina Sixtus
+  - [@moseschmiedel](https://gitlab.com/moseschmiedel) Mose Schmiedel
+  - [@rico-hengst](https://github.com/rico-hengst) Rico Hengst
+  - [@kuro610](https://gitlab.com/kuro610) Kurt Roscher
+  - [@tjfoerster](https://gitlab.com/tjfoerster) Timon Förster
+
+---
+
+## License
 
 This software is copyright (c) 2015-2023 by Daniel Böhmer.
+
 This web application is free software, licensed under the
 [GNU Affero General Public License, Version 3, 19 November 2007](LICENSE).
